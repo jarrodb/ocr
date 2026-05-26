@@ -1,0 +1,44 @@
+# Test image: bakes in every dependency needed to run unit, integration, and
+# Python-SDK tests. Source is bind-mounted at /work; module/build caches live
+# in named docker volumes so iterative `just test` runs stay fast.
+FROM golang:1.24-bookworm
+
+ARG PYTHON_SDK_REPO=parkpow/deep-license-plate-recognition
+ARG PYTHON_SDK_REF=master
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        tesseract-ocr \
+        tesseract-ocr-eng \
+        python3 \
+        python3-venv \
+        python3-pip \
+        ca-certificates \
+        curl \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Isolated venv for the Python SDK so `requests` doesn't collide with the system.
+RUN python3 -m venv /opt/sdk-venv && \
+    /opt/sdk-venv/bin/pip install --no-cache-dir --upgrade pip requests Pillow
+
+# Vendor the official Platerecognizer Python script. Pin via PYTHON_SDK_REF so
+# test runs are reproducible.
+#
+# The upstream script hard-codes `https://api.platerecognizer.com/...` for
+# cloud-mode requests. We patch it once at build time to read the cloud URL
+# from $OCR_CLOUD_URL (falling back to the original literal). Tests then point
+# it at the mock to exercise the real `Authorization: Token` contract end-to-
+# end via the official client — no monkey-patching at run time, no /etc/hosts
+# tricks, no TLS termination needed.
+RUN curl -fsSL \
+        "https://raw.githubusercontent.com/${PYTHON_SDK_REPO}/${PYTHON_SDK_REF}/plate_recognition.py" \
+        -o /opt/plate_recognition.py && \
+    sed -i '1i import os' /opt/plate_recognition.py && \
+    sed -i 's|"https://api.platerecognizer.com/v1/plate-reader/"|os.environ.get("OCR_CLOUD_URL", "https://api.platerecognizer.com/v1/plate-reader/")|g' /opt/plate_recognition.py && \
+    grep -q 'OCR_CLOUD_URL' /opt/plate_recognition.py  # fail the build if the patch missed
+
+ENV PYTHON_BIN=/opt/sdk-venv/bin/python \
+    OCR_PYTHON_SDK_PATH=/opt/plate_recognition.py \
+    GOFLAGS=-buildvcs=false
+
+WORKDIR /work

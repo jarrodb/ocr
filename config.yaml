@@ -1,0 +1,74 @@
+api_token: mocktoken
+# Cloud mock requires Authorization: Token <api_token>.
+# Set false to behave like the on-prem SDK image (unauthenticated) — the
+# official Python client uses this mode when invoked with --sdk-url.
+auth_required: true
+port: 8080
+mode: dev
+delay: 0s
+failure_rate: 0.0
+default_region: us-ca
+generated_plate_prefix: MCK
+
+cors_origins:
+  - "*"
+
+tesseract:
+  enabled: true
+  binary_path: tesseract
+  psm: 8
+  language: eng
+  min_confidence: 60.0
+
+# Fixtures match by substring against upload_url + filename (case-insensitive).
+# First match wins. A fixture is the only way to make the mock return a
+# specific plate for a specific input image — without one, the mock falls
+# through to OCR (if tesseract is available and confident) or to the
+# generator, which prefixes plates with "MCK".
+fixtures:
+  - match: tesla-model3
+    plate: tsla123
+    region_code: us-ca
+    make: Tesla
+    model: Model 3
+    color: red
+    type: Sedan
+    year_min: 2021
+    year_max: 2023
+  - match: f150
+    plate: tx5f150
+    region_code: us-tx
+    make: Ford
+    model: F-150
+    color: white
+    type: Pickup
+    year_min: 2020
+    year_max: 2023
+
+# Vehicle seed table for generated/OCR fallbacks. The plate string is hashed to
+# pick a vehicle deterministically — same plate → same make/model.
+vehicles:
+  - make: Toyota
+    model: Camry
+    color: silver
+    type: Sedan
+    year_min: 2018
+    year_max: 2022
+  - make: Honda
+    model: Civic
+    color: blue
+    type: Sedan
+    year_min: 2017
+    year_max: 2021
+  - make: Ford
+    model: F-150
+    color: white
+    type: Pickup
+    year_min: 2019
+    year_max: 2023
+  - make: Tesla
+    model: Model 3
+    color: red
+    type: Sedan
+    year_min: 2020
+    year_max: 2024

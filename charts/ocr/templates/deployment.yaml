@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ocr.name" . }}
+  labels:
+    {{- include "ocr.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ocr.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ocr.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: ocr
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.config.port }}
+              name: http
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: http
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "ocr.name" . }}

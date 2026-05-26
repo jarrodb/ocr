@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ocr.name" . }}
+  labels:
+    {{- include "ocr.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    api_token: {{ .Values.config.apiToken | quote }}
+    auth_required: {{ .Values.config.authRequired }}
+    port: {{ .Values.config.port }}
+    mode: {{ .Values.config.mode | quote }}
+    default_region: {{ .Values.config.defaultRegion | quote }}
+    generated_plate_prefix: {{ .Values.config.generatedPlatePrefix | quote }}
+    tesseract:
+      enabled: {{ .Values.config.tesseract.enabled }}
+      binary_path: {{ .Values.config.tesseract.binaryPath | quote }}
+      psm: {{ .Values.config.tesseract.psm }}
+      language: {{ .Values.config.tesseract.language | quote }}
+      min_confidence: {{ .Values.config.tesseract.minConfidence }}
+    fixtures:
+      {{- toYaml .Values.config.fixtures | nindent 6 }}
+    vehicles:
+      {{- toYaml .Values.config.vehicles | nindent 6 }}

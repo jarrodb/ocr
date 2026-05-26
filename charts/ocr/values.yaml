@@ -1,0 +1,35 @@
+image:
+  repository: ghcr.io/jarrodb/ocr
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+# Gateway API HTTPRoute. Set gateway.name to an existing Gateway in the
+# cluster (kind local: typically the cilium/envoy gateway).
+gateway:
+  enabled: true
+  name: gateway
+  namespace: gateway
+  hostname: ocr.46labs.test
+
+config:
+  apiToken: mocktoken
+  # true: cloud parity (requires Authorization: Token header).
+  # false: on-prem SDK parity (no auth) — needed if callers use the official
+  # Python client's --sdk-url mode.
+  authRequired: true
+  port: 8080
+  mode: dev
+  defaultRegion: us-ca
+  generatedPlatePrefix: MCK
+  tesseract:
+    enabled: true
+    binaryPath: tesseract
+    psm: 8
+    language: eng
+    minConfidence: 60.0
+  fixtures: []
+  vehicles: []

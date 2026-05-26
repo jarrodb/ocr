@@ -1,0 +1,11 @@
+/ocr-mock
+/bin/
+/dist/
+*.test
+*.out
+.env
+.DS_Store
+# Vendored Python SDK only lives inside the test image (Dockerfile.tests).
+# If `tests/sdk/` exists on the host it's a leftover from earlier flows.
+/tests/
+

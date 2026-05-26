@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test (in Docker)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # `just ci` builds Dockerfile.tests and runs gofmt + vet + Go race tests +
+      # Python SDK e2e tests entirely inside that image. The runner only needs
+      # docker + just; no Go or Python toolchain on the host.
+      - name: Install just
+        uses: extractions/setup-just@v2
+
+      - name: Run dockerized CI
+        run: just ci
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.4.0
