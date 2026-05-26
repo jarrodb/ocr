@@ -63,7 +63,7 @@ func parsePlateReaderRequest(r *http.Request, httpClient *http.Client) (ocr.Requ
 		wantMMC = boolForm(r.FormValue("mmc"))
 
 		if fh, _, err := r.FormFile("upload"); err == nil {
-			defer fh.Close()
+			defer func() { _ = fh.Close() }()
 			b, err := io.ReadAll(fh)
 			if err != nil {
 				return ocr.Request{}, fmt.Errorf("read upload: %w", err)
@@ -131,7 +131,7 @@ func fetchURL(ctx context.Context, c *http.Client, url string) ([]byte, string, 
 	if err != nil {
 		return nil, "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode >= 400 {
 		return nil, "", fmt.Errorf("upstream %d", resp.StatusCode)
 	}

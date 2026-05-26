@@ -61,6 +61,7 @@ ci:
 			set -e; \
 			echo "==> gofmt"; test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }; \
 			echo "==> vet"; go vet ./...; \
+			echo "==> lint"; golangci-lint run ./...; \
 			echo "==> test"; go test -race -skip TestPythonSDK ./pkg/...; \
 			echo "==> e2e"; go test -v -run TestPythonSDK ./pkg/server/; \
 		'

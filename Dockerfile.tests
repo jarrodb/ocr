@@ -6,6 +6,8 @@ FROM golang:1.24-bookworm
 ARG PYTHON_SDK_REPO=parkpow/deep-license-plate-recognition
 ARG PYTHON_SDK_REF=master
 
+ARG GOLANGCI_LINT_VERSION=v2.4.0
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         tesseract-ocr \
         tesseract-ocr-eng \
@@ -16,6 +18,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         git \
     && rm -rf /var/lib/apt/lists/*
+
+# golangci-lint pinned to the same version as the GH Actions job so `just ci`
+# is byte-equivalent to the cloud lint step.
+RUN curl -fsSL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
+    | sh -s -- -b /usr/local/bin "${GOLANGCI_LINT_VERSION}"
 
 # Isolated venv for the Python SDK so `requests` doesn't collide with the system.
 RUN python3 -m venv /opt/sdk-venv && \
