@@ -34,14 +34,38 @@ func (g *generator) generate(req Request) Reading {
 		Plate:      strings.ToLower(plate),
 		Score:      0.85 + r.Float64()*0.1,
 		DScore:     0.95 + r.Float64()*0.04,
-		RegionCode: g.defaultRegion,
+		RegionCode: pickRegion(r, req.Regions, g.defaultRegion),
 		Source:     SourceGenerated,
-	}
-	if len(req.Regions) > 0 {
-		out.RegionCode = req.Regions[0]
 	}
 	g.fillVehicle(&out)
 	return out
+}
+
+// pickRegion synthesizes a state-specific region code. Real PR Cloud detects
+// the state from the image; the mock can't, so it picks deterministically:
+//
+//   - If the caller scoped to specific states (e.g. "us-ca", "us-tx"), pick
+//     one of them — mirrors PR returning the matched code from a scoped list.
+//   - Broad scopes ("us") or no scope fall through to the mock's default US
+//     state pool, so generated demos show variety instead of always us-ca.
+func pickRegion(r *rand.Rand, requested []string, fallback string) string {
+	specific := requested[:0:0]
+	for _, c := range requested {
+		if strings.Contains(c, "-") {
+			specific = append(specific, c)
+		}
+	}
+	if len(specific) > 0 {
+		return specific[r.Intn(len(specific))]
+	}
+	pool := []string{"us-ca", "us-tx", "us-ny", "us-fl", "us-wa", "us-co", "us-or", "us-az"}
+	if fallback == "" {
+		fallback = "us-ca"
+	}
+	if len(pool) == 0 {
+		return fallback
+	}
+	return pool[r.Intn(len(pool))]
 }
 
 // fillVehicle picks a deterministic vehicle for a plate. Used by both the
