@@ -29,8 +29,7 @@ import (
 )
 
 // minimal valid JPEG SOI + EOI markers; the script reads bytes and uploads them
-// as-is, the mock doesn't decode them, and Tesseract is disabled in this test
-// config — so any non-empty file works. The fixture/generator paths match on
+// as-is, the mock doesn't decode them. The fixture/generator paths match on
 // the filename, not the bytes.
 var fakeJPEG = []byte{0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 'J', 'F', 'I', 'F', 0x00, 0xFF, 0xD9}
 
@@ -65,7 +64,6 @@ func startMock(t *testing.T, authRequired bool) *httptest.Server {
 		CORSOrigins:          []string{"*"},
 		DefaultRegion:        "us-ca",
 		GeneratedPlatePrefix: "MCK",
-		Tesseract:            config.Tesseract{Enabled: false},
 		Fixtures: []config.Fixture{
 			{Match: "tesla-model3", Plate: "tsla123", RegionCode: "us-ca", Make: "Tesla", Model: "Model 3", Color: "red", Type: "Sedan", YearMin: 2021, YearMax: 2023},
 		},

@@ -13,18 +13,10 @@ generated_plate_prefix: MCK
 cors_origins:
   - "*"
 
-tesseract:
-  enabled: true
-  binary_path: tesseract
-  psm: 8
-  language: eng
-  min_confidence: 60.0
-
 # Fixtures match by substring against upload_url + filename (case-insensitive).
 # First match wins. A fixture is the only way to make the mock return a
 # specific plate for a specific input image — without one, the mock falls
-# through to OCR (if tesseract is available and confident) or to the
-# generator, which prefixes plates with "MCK".
+# through to the generator, which prefixes plates with "MCK".
 fixtures:
   - match: tesla-model3
     plate: tsla123

@@ -15,34 +15,30 @@ client (pkg/client)  ───────────────────�
                                                      ▼
                                                  pkg/ocr (Engine ladder)
                                                      │
-                                          ┌──────────┼──────────┐
-                                          ▼          ▼          ▼
-                                     fixture     tesseract   generator
-                                     (config)   (subprocess) (MCK-prefix)
+                                          ┌──────────┴──────────┐
+                                          ▼                     ▼
+                                     fixture                generator
+                                     (config)               (MCK-prefix)
 ```
 
 Engine ladder:
 
 1. **Fixture** — substring match against `upload_url` + filename. Deterministic, fixture-defined plate and MMC.
-2. **Tesseract** — subprocess call to bundled `tesseract` binary. PSM 8 (single word) + TSV output → highest-confidence word. Below `min_confidence` falls through.
-3. **Generator** — synthetic plate prefixed `MCK` (configurable). MMC picked deterministically from the vehicle seed table by hashing the plate. This tier cannot fail.
+2. **Generator** — synthetic plate prefixed `MCK` (configurable). MMC picked deterministically from the vehicle seed table by hashing the plate. This tier cannot fail.
 
-The MMC fields (make / model / color / year / type) are always synthesized — Tesseract reads text, not cars. Real PR Cloud uses trained CNNs that have no comparable OSS drop-in.
+The mock does not perform real OCR — generic OCR without plate localization can't read photos of cars. MMC (make / model / color / year / type) comes from the vehicle seed table, picked deterministically from the plate hash. Real PR Cloud uses trained CNNs that have no comparable OSS drop-in.
 
 ## Setup
 
 ```bash
 go mod download
-# For real OCR locally:
-brew install tesseract       # macOS
-apk add tesseract-ocr tesseract-ocr-data-eng   # alpine
 ```
 
 ## Run
 
 ```bash
 just run         # local Go process, reads ./config.yaml
-just docker      # build and run the alpine image (tesseract bundled)
+just docker      # build and run the alpine image
 just tilt        # deploy to local kind via Helm
 ```
 
@@ -52,7 +48,7 @@ Mock endpoints (token: `mocktoken`):
 POST   /v1/plate-reader/        # multipart: upload | upload_url, regions, mmc, camera_id
 GET    /v1/statistics/          # usage counters
 GET    /info/                   # version / license info (mirrors on-prem SDK)
-GET    /status                  # debug: counters + tesseract availability (no auth)
+GET    /status                  # debug: counters + mode (no auth)
 ```
 
 ## Test
@@ -62,12 +58,10 @@ All tests run inside the `Dockerfile.tests` image with the repo bind-mounted; Go
 ```bash
 just test    # Go unit tests
 just e2e     # exercises the official Python SDK (parkpow/deep-license-plate-recognition) against the mock
-just ci      # gofmt + vet + test + e2e
+just ci      # gofmt + vet + lint + test + e2e
 ```
 
 The Python SDK tests use the script's `--sdk-url` mode, which does not send `Authorization`. The mock therefore runs with `auth_required: false` for those tests — the on-prem SDK parity mode. The Go SDK tests cover the cloud/Token contract separately.
-
-`TestPlateReader_TesseractPath` is skipped unless a test fixture image is added to `testdata/` (see TODO at bottom).
 
 ## Principles
 
@@ -91,7 +85,6 @@ The Python SDK tests use the script's `--sdk-url` mode, which does not send `Aut
 ### Testing
 
 - Tests drive the mock via the Go SDK in `pkg/client/`, not raw HTTP.
-- Real OCR path is exercised only when tesseract is present; otherwise the test is `t.Skip`ed.
 - No `time.Sleep` for ordering — the engine ladder is synchronous; tests assert on response.
 
 ### Kubernetes
@@ -111,10 +104,3 @@ Snapshot Cloud subset implemented:
 | `GET /info/` | on-prem-style version + usage |
 | Webhooks | not yet implemented |
 | `mode=redaction`, `mode=fast`, advanced config | accepted, no behavior change |
-
-## OCR Engine Notes
-
-- Tesseract is bundled into the image (~85 MB). Subprocess invocation keeps the Go binary CGO-free.
-- `tesseract.enabled: false` short-circuits to fixture→generator only.
-- For higher accuracy, swap `pkg/ocr/tesseract.go` for an ONNX Runtime plate-OCR pipeline — the `Engine` interface is the swap point.
-- Make/Model/Color/Year are seeded, not detected. Replacing them with a real classifier requires shipping CNN weights (~100–200 MB) and is outside the mock's scope.

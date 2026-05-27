@@ -29,14 +29,6 @@ type VehicleSeed struct {
 	YearMax int    `mapstructure:"year_max"`
 }
 
-type Tesseract struct {
-	Enabled       bool    `mapstructure:"enabled"`
-	BinaryPath    string  `mapstructure:"binary_path"`
-	PSM           int     `mapstructure:"psm"`
-	Language      string  `mapstructure:"language"`
-	MinConfidence float64 `mapstructure:"min_confidence"`
-}
-
 type Config struct {
 	Port     int
 	APIToken string
@@ -52,7 +44,6 @@ type Config struct {
 	CORSOrigins          []string
 	DefaultRegion        string
 	GeneratedPlatePrefix string
-	Tesseract            Tesseract
 	Fixtures             []Fixture
 	Vehicles             []VehicleSeed
 }

@@ -48,7 +48,7 @@ func (s *Server) Handler() http.Handler {
 func (s *Server) Start() error {
 	addr := fmt.Sprintf(":%d", s.cfg.Port)
 	log.Printf("Starting Platerecognizer mock on %s", addr)
-	log.Printf("Mode: %s, Tesseract enabled: %t (min conf: %.0f)", s.cfg.Mode, s.cfg.Tesseract.Enabled, s.cfg.Tesseract.MinConfidence)
+	log.Printf("Mode: %s", s.cfg.Mode)
 	log.Printf("POST /v1/plate-reader/")
 	log.Printf("GET  /v1/statistics/")
 	log.Printf("GET  /info/")

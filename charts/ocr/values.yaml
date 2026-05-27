@@ -25,11 +25,5 @@ config:
   mode: dev
   defaultRegion: us-ca
   generatedPlatePrefix: MCK
-  tesseract:
-    enabled: true
-    binaryPath: tesseract
-    psm: 8
-    language: eng
-    minConfidence: 60.0
   fixtures: []
   vehicles: []

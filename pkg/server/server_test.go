@@ -3,7 +3,6 @@ package server_test
 import (
 	"context"
 	"net/http/httptest"
-	"os/exec"
 	"strings"
 	"testing"
 
@@ -23,7 +22,6 @@ func setup(t *testing.T) (*httptest.Server, *client.Client) {
 		CORSOrigins:          []string{"*"},
 		DefaultRegion:        "us-ca",
 		GeneratedPlatePrefix: "MCK",
-		Tesseract:            config.Tesseract{Enabled: false},
 		Fixtures: []config.Fixture{
 			{Match: "tesla", Plate: "tsla123", RegionCode: "us-ca", Make: "Tesla", Model: "Model 3", Color: "red", Type: "Sedan", YearMin: 2021, YearMax: 2023},
 		},
@@ -145,16 +143,6 @@ func TestStatistics(t *testing.T) {
 	if stats.Usage.Calls < 2 {
 		t.Errorf("expected usage.calls >= 2, got %d", stats.Usage.Calls)
 	}
-}
-
-// TestPlateReader_TesseractPath exercises the real OCR ladder when tesseract is
-// installed on the host. Skipped otherwise — the generator-fallback test above
-// already covers the no-tesseract path.
-func TestPlateReader_TesseractPath(t *testing.T) {
-	if _, err := exec.LookPath("tesseract"); err != nil {
-		t.Skip("tesseract not installed; skipping real-OCR path test")
-	}
-	t.Skip("tesseract installed but no test fixture image bundled; see testdata/ TODO")
 }
 
 // errorsAs is a tiny re-implementation of errors.As to keep the test file's

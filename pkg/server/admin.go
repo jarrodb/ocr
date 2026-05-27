@@ -54,7 +54,6 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		"mode":        s.cfg.Mode,
 		"total_calls": s.totalCalls.Load(),
 		"month_calls": s.monthCalls.Load(),
-		"tesseract":   s.cfg.Tesseract.Enabled,
 	})
 }
 

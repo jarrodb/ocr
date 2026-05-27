@@ -13,10 +13,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -ldflags="-s -w" -o ocr-mock cmd/main.go
 
 FROM alpine:3.20
-RUN apk --no-cache add \
-    ca-certificates \
-    tesseract-ocr \
-    tesseract-ocr-data-eng
+RUN apk --no-cache add ca-certificates
 COPY --from=builder /app/ocr-mock /ocr-mock
 EXPOSE 8080
 CMD ["/ocr-mock"]

@@ -16,12 +16,6 @@ func init() {
 	viper.SetDefault("default_region", "us-ca")
 	viper.SetDefault("generated_plate_prefix", "MCK")
 
-	viper.SetDefault("tesseract.enabled", true)
-	viper.SetDefault("tesseract.binary_path", "tesseract")
-	viper.SetDefault("tesseract.psm", 8)
-	viper.SetDefault("tesseract.language", "eng")
-	viper.SetDefault("tesseract.min_confidence", 60.0)
-
 	viper.AutomaticEnv()
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
@@ -56,13 +50,6 @@ func Load(opts ...Option) (*Config, error) {
 		CORSOrigins:          viper.GetStringSlice("cors_origins"),
 		DefaultRegion:        viper.GetString("default_region"),
 		GeneratedPlatePrefix: viper.GetString("generated_plate_prefix"),
-		Tesseract: Tesseract{
-			Enabled:       viper.GetBool("tesseract.enabled"),
-			BinaryPath:    viper.GetString("tesseract.binary_path"),
-			PSM:           viper.GetInt("tesseract.psm"),
-			Language:      viper.GetString("tesseract.language"),
-			MinConfidence: viper.GetFloat64("tesseract.min_confidence"),
-		},
 	}
 
 	if len(cfg.CORSOrigins) == 0 {

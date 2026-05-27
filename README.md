@@ -2,20 +2,19 @@
 
 A mock of the [Platerecognizer Snapshot Cloud API](https://guides.platerecognizer.com/docs/snapshot/api-reference/) for local development and integration testing. Drop-in replacement for `https://api.platerecognizer.com/v1/plate-reader/`.
 
-Ships with bundled Tesseract for best-effort real OCR, falls back to a deterministic generator that prefixes synthesized plates with `MCK` so tests can identify them by string.
+Returns deterministic plate readings — fixture matches first, then a hashed generator that prefixes synthesized plates with `MCK` so tests can identify them by string.
 
 [![CI](https://github.com/jarrodb/ocr/actions/workflows/ci.yml/badge.svg)](https://github.com/jarrodb/ocr/actions/workflows/ci.yml)
 [![Release](https://github.com/jarrodb/ocr/actions/workflows/release.yml/badge.svg)](https://github.com/jarrodb/ocr/actions/workflows/release.yml)
 
 ## What it returns
 
-`POST /v1/plate-reader/` resolves a plate through a three-tier ladder:
+`POST /v1/plate-reader/` resolves a plate through a two-tier ladder:
 
 1. **Fixture** — substring match against `upload_url` + filename. Define your own in `config.yaml`.
-2. **Tesseract OCR** — bundled in the image, invoked as a subprocess. Below `min_confidence` falls through.
-3. **Generator** — synthetic plate prefixed `MCK` (e.g. `MCK7421`). Same input always produces the same plate.
+2. **Generator** — synthetic plate prefixed `MCK` (e.g. `MCK7421`). Same input always produces the same plate.
 
-Make/model/color/year are always seeded from a vehicle table — Tesseract reads text, not cars. The response shape matches the real Snapshot API field-for-field.
+Make/model/color/year are always seeded from a vehicle table, picked deterministically from the plate hash. The response shape matches the real Snapshot API field-for-field.
 
 ## Pull the image
 
@@ -60,8 +59,6 @@ Chart values of note:
 | `image.tag` | `latest` | Pin to a semver tag for reproducibility |
 | `config.apiToken` | `mocktoken` | Sent as `Authorization: Token <value>` |
 | `config.authRequired` | `true` | Cloud parity. Set false for on-prem SDK parity (no auth) |
-| `config.tesseract.enabled` | `true` | Disable to skip OCR and always fall back to generator |
-| `config.tesseract.minConfidence` | `60.0` | Below this, Tesseract output is dropped |
 | `config.generatedPlatePrefix` | `MCK` | First chars of any synthesized plate |
 | `config.defaultRegion` | `us-ca` | Used when caller didn't specify regions |
 | `config.fixtures` | `[]` | Substring-match rules |
@@ -112,7 +109,7 @@ The mock honors both contracts the real Platerecognizer offers:
 | `POST /v1/plate-reader/` | `upload` (multipart + base64), `upload_url`, `regions`, `mmc`, `camera_id`, `timestamp` |
 | `GET /v1/statistics/` | `calls` / `month` / `total_calls` / `resets_on` |
 | `GET /info/` | on-prem-style version + usage |
-| `GET /status` | Debug: counters + Tesseract availability (no auth, mock-only) |
+| `GET /status` | Debug: counters and mode (no auth, mock-only) |
 
 ## Development
 
@@ -125,7 +122,7 @@ just ci       # everything above + gofmt + vet
 just tilt     # deploy to local kind via Helm
 ```
 
-All test execution happens inside `Dockerfile.tests` — Tesseract, Python 3, and the vendored `plate_recognition.py` are baked in. The repo is bind-mounted; module/build caches live in named docker volumes so iterative runs stay fast.
+All test execution happens inside `Dockerfile.tests` — Python 3 and the vendored `plate_recognition.py` are baked in. The repo is bind-mounted; module/build caches live in named docker volumes so iterative runs stay fast.
 
 ## Releasing
 
