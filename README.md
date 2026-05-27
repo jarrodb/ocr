@@ -21,7 +21,7 @@ Make/model/color/year are always seeded from a vehicle table — Tesseract reads
 
 ```bash
 docker pull ghcr.io/jarrodb/ocr:latest          # tracks main
-docker pull ghcr.io/jarrodb/ocr:v0.1.0          # pin a version
+docker pull ghcr.io/jarrodb/ocr:v0.1.1          # pin a version
 ```
 
 Multi-arch: `linux/amd64`, `linux/arm64`.
